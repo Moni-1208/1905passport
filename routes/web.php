@@ -43,3 +43,11 @@ Route::get('/decrypt','Test\GoodsController@decrypt');
 
 // 非对称解密
 Route::get('/decrypt2','Test\GoodsController@decrypt2');
+
+
+// 验签 注册 
+Route::post('sign/reg','Check\SignController@reg');
+// 登陆
+Route::post('sign/login','Check\SignController@login');
+// 获取用户信息接口
+Route::get('sign/showTime','Check\SignController@showTime');
