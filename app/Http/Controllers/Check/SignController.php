@@ -17,11 +17,11 @@ class SignController extends Controller
     	$data=$_POST;
         // dd($data);die;
     	if($data['pwds']!=$data['s_pwd']){
-    		$json=[
+    		$response=[
     			'error'=>'1020',
     			'msg'=>'两次密码不一样'
     		];
-    		return $json;
+    		return $response;
     	}
     	// 移除确认密码
     	unset($data['pwds']);
@@ -31,36 +31,50 @@ class SignController extends Controller
         // 验证用户是否已存在
         $user=SignModel::where(['s_name'=>$data['s_name']])->first();
         if($user){
-            die('用户名已被使用,请重新输入');
+            $response = [
+                'errno' => 500003,
+                'msg'   => "用户名已被使用"
+            ];
+            die(json_encode($response,JSON_UNESCAPED_UNICODE));
         }
         // 验证tel是否已存在
-        $user=SignModel::where(['s_tel'=>$data['s_tel']])->first();
+        $user=SignModel::where(['s_tel'=>$data['s_tel']])->first(); 
         if($user){
-            die('用户名已被使用,请重新输入');
+             $response = [
+                'errno' => 500002,
+                'msg'   => "tel已被使用"
+            ];
+            die(json_encode($response,JSON_UNESCAPED_UNICODE));
         }
         // 验证email是否已存在
         $user=SignModel::where(['s_email'=>$data['s_email']])->first();
         if($user){
-            die('用户名已被使用,请重新输入');
+            $response = [
+                'errno' => 500003,
+                'msg'   => "Email已被使用"
+            ];
+            die(json_encode($response,JSON_UNESCAPED_UNICODE));
         }
-    	// 添加
-    	$res=SignModel::insert($data);
-
-    	if ($res) {
-    		$json=[
-    			'error'=>'ok',
-    			'msg'=>'注册成功'
-    		];
-    	}else{
-    		$json=[
-    			'error'=>'6001',
-    			'msg'=>'注册失败'
-    		];
-    	}
-        return $json;
+        // echo __METHOD__;die;
+        $uid = SignModel::insertGetId($data);
+        if($uid)
+        {
+            $response = [
+                'errno' => 0,
+                'msg'   => 'ok'
+            ];
+        }else{
+            $response = [
+                'errno' => 500001,
+                'msg'   => "服务器内部错误,请稍后再试"
+            ];
+        }
+        return json_encode($response);
     }
 
-        //登录
+
+
+    //登录
     public function login(Request $request){
         // print_r($_POST);
         $value=$request->input('s_name');
@@ -81,7 +95,10 @@ class SignController extends Controller
         {
             if(password_verify($s_pwd,$user1->s_pwd)){
                 $s_id = $user1->s_id;
-                echo "ok";
+                $response = [
+                    'errno' => 'ok',
+                    'msg'   => '登陆成功'
+                ];
             }else{
                 $response = [
                     'errno' => 400003,
@@ -92,6 +109,7 @@ class SignController extends Controller
         }
         if($user2){        //使用 email 登录
             if(password_verify($s_pwd,$user2->s_pwd)){
+                echo "ok";
                 $s_id = $user2->s_id;
             }else{
                 $response = [
@@ -103,6 +121,7 @@ class SignController extends Controller
         }
         if($user3){        // 使用电话号登录
             if(password_verify($s_pwd,$user3->s_pwd)){
+                echo "ok";
                 $s_id = $user3->s_id;
             }else{
                 $response = [
@@ -118,7 +137,7 @@ class SignController extends Controller
         echo $redis_token_key;
         Redis::set($redis_token_key,$token,86400); // 生成token 设置存储时间
 
-        $reponse=[
+        $response=[
             'error'=>0,
             'msg'=>'ok',
             'data'=>[
@@ -126,7 +145,7 @@ class SignController extends Controller
                 'token'=>$token
             ]
         ];
-        return $reponse; // baixue  
+        return $response; // baixue  
     }
         // // 按email找记录
         // $user=SignModel::where(['s_email'=>$value])->first();
